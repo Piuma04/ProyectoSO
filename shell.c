@@ -8,10 +8,11 @@
    
 int main(){
 	
+	int seguir = 1;
 	char str[100];
 	char *remp, *token, *resto;
 	pid_t pid;
-
+	
 	
 	do{
 		//recibe toda la linea hasta el enter
@@ -30,32 +31,55 @@ int main(){
 		
 		
 		if(strcmp(token,"help") == 0) {
-			//implementar el help
+			printf("help\n");
+			printf("ls\n");
+			printf("mkdir\n");
+			printf("\n");
+			printf("\n");
+			printf("\n");
+
 		}
+		
 		//listar directorio (falta hacer para qeu se peuda poner el directorio (?))
 		else if(strcmp(token,"ls") == 0) {
+			
 			pid = fork();
-			if(pid == 0)
-			 execlp("ls","ls",NULL);
-			wait(NULL);
-		}
-		//crear directorio
-		else if(strcmp(token,"mkdir") == 0){
-			pid = fork();
-			token = strtok(NULL," ");//capturar si no hay nombre de directorio
 			if(pid == 0){
-			 execlp("mkdir","mkdir", token ,NULL);
+				char *args[] = {"ls",resto,NULL}; //preguntar si esto es valido
+				execvp("./ls",args);
+				
+			 
 			}
 			wait(NULL);
 		}
-		else{
+		
+		//crear directorio
+		else if(strcmp(token,"mkdir") == 0){
+			
+			
+			pid = fork();
+			if(pid == 0){
+				char *args[] = {"mkdir",resto,NULL}; 
+				execvp("./mkdir",args);
+				
+			 
+			}
+			wait(NULL);
+		}
+		
+		
+		else if(strcmp(token,"exit") == 0){
+			seguir = 0;
+		}
+		
+		else{	
 			printf("\nComando incorecto\n");
 			
 		}
 		
 		
 		
-	}while(strcmp(token,"exit") != 0);
+	}while(seguir);
 	
 
 
