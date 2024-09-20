@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]){
 	
-	printf("nasheeii %s \n",argv[0]);
+	printf(" %s \n",argv[0]);
 	printf("%s \n",argv[1]);
 	
 	
