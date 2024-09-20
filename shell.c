@@ -9,7 +9,7 @@
 int main(){
 	
 	char str[100];
-	char *remp, *token;
+	char *remp, *token, *resto;
 	pid_t pid;
 
 	
@@ -18,16 +18,16 @@ int main(){
 		printf("Ingrese un comando: ");
 		fgets(str,sizeof(str),stdin);
 		fflush(stdin);
-		printf("%s \n",str);
 		
-		//remplaza el entre por el end of character
+		
+		//remplaza el enter que deja fgets al final por el end of character
 		remp = strchr(str, '\n');
 		if(remp) *remp = '\0';
 		
-		//obtiene la primera palabra
-		token = strtok(str," ");
 		
-		 
+		token = strtok(str," "); //obtiene la primera palabra
+		resto = strtok(NULL,""); //captura el resto de la cadena
+		
 		
 		if(strcmp(token,"help") == 0) {
 			//implementar el help
