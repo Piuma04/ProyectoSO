@@ -18,6 +18,7 @@ int main(){
 		printf("Ingrese un comando: ");
 		fgets(str,sizeof(str),stdin);
 		fflush(stdin);
+		printf("%s \n",str);
 		
 		//remplaza el entre por el end of character
 		remp = strchr(str, '\n');
@@ -26,9 +27,13 @@ int main(){
 		//obtiene la primera palabra
 		token = strtok(str," ");
 		
+		 
 		
+		if(strcmp(token,"help") == 0) {
+			//implementar el help
+		}
 		//listar directorio (falta hacer para qeu se peuda poner el directorio (?))
-		if(strcmp(token,"ls") == 0) {
+		else if(strcmp(token,"ls") == 0) {
 			pid = fork();
 			if(pid == 0)
 			 execlp("ls","ls",NULL);
