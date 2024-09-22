@@ -4,6 +4,7 @@
 #include <sys/wait.h>
 #include <pthread.h>
 #include <string.h>
+#include <errno.h>
 #define BFR_SZ 100; //porque da error este?
    
 int main(){
