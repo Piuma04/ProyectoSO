@@ -2,13 +2,13 @@ CC = gcc
 CFLAGS = -Wall -Wextra
 
 # Lista de archivos fuente
-SOURCES = shell.c mkdir.c ls.c
+SOURCES = shell.c mkdir.c ls.c rmdir.c touch.c cat.c chmod.c
 
 # Objetos generados a partir de los archivos fuente
 OBJECTS = $(SOURCES:.c=.o)
 
 # Nombres de los ejecutables
-EXECUTABLES = shell mkdir ls
+EXECUTABLES = shell mkdir ls rmdir touch cat chmod
 
 # Regla para compilar los objetos
 %.o: %.c
@@ -26,6 +26,21 @@ mkdir: mkdir.o
 
 ls: ls.o
 	$(CC) $(CFLAGS) $^ -o $@
+	
+touch: touch.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+cat: cat.o
+	$(CC) $(CFLAGS) $^ -o $@
+
+rm: rmdir.o
+	$(CC) $(CFLAGS) $^ -o $@
+	
+
+chmod: chmod.o
+	$(CC) $(CFLAGS) $^ -o $@
+	
+	
 
 # Regla para limpiar los archivos objeto y ejecutables
 clean:

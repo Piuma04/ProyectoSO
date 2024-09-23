@@ -67,7 +67,58 @@ int main(){
 			}
 			wait(NULL);
 		}
-		
+		//mostrar contenido archivo
+		else if(strcmp(token,"cat") == 0){
+			
+			
+			pid = fork();
+			if(pid == 0){
+				char *args[] = {"cat",resto,NULL}; 
+				execvp("./cat",args);
+				
+			 
+			}
+			wait(NULL);
+		}
+		//remover directorio
+		else if(strcmp(token,"rmdir") == 0){
+			
+			
+			pid = fork();
+			if(pid == 0){
+				char *args[] = {"rmdir",resto,NULL}; 
+				execvp("./rmdir",args);
+				
+			 
+			}
+			wait(NULL);
+		}
+		//cambiar permisos archivo
+		else if(strcmp(token,"chmod") == 0){
+			
+			
+			pid = fork();
+			if(pid == 0){
+				char *args[] = {"chmod",resto,NULL}; 
+				execvp("./chmod",args);
+				
+			 
+			}
+			wait(NULL);
+		}
+		//crear archivo
+		else if(strcmp(token,"touch") == 0){
+			
+			
+			pid = fork();
+			if(pid == 0){
+				char *args[] = {"touch",resto,NULL}; 
+				execvp("./touch",args);
+				
+			 
+			}
+			wait(NULL);
+		}
 		
 		else if(strcmp(token,"exit") == 0){
 			seguir = 0;
