@@ -32,102 +32,35 @@ int main(){
 		
 		
 		if(strcmp(token,"help") == 0) {
-			printf("help\n");
-			printf("ls\n");
-			printf("mkdir\n");
+			printf("help (muestra los comandos)\n");
 			printf("\n");
-			printf("\n");
+			printf("mkdir (crea un directorio vacio)\n");
+			printf("rmdir (remueve el directorio,el mismo debe estar vacio)\n");
+			printf("touch (crea un archivo nuevo si no existe)\n");
 			printf("\n");
 
 		}
-		
-		//listar directorio (falta hacer para qeu se peuda poner el directorio (?))
-		else if(strcmp(token,"ls") == 0) {
+		else if(strcmp(token,"exit") != 0) {
 			
 			pid = fork();
+			
 			if(pid == 0){
-				char *args[] = {"ls",resto,NULL}; //preguntar si esto es valido
-				execvp("./ls",args);
-				
-			 
+				char para_dir[] = "./"; 
+				strcat(para_dir,token);
+				char *args[] = {token,resto,NULL}; //preguntar si esto es valido
+				if(execvp(para_dir,args) == -1){
+					printf("Comando invalido\n");
+				}
+			
+				exit(0);
 			}
 			wait(NULL);
 		}
 		
-		//crear directorio
-		else if(strcmp(token,"mkdir") == 0){
-			
-			
-			pid = fork();
-			if(pid == 0){
-				char *args[] = {"mkdir",resto,NULL}; 
-				execvp("./mkdir",args);
-				
-			 
-			}
-			wait(NULL);
-		}
-		//mostrar contenido archivo
-		else if(strcmp(token,"cat") == 0){
-			
-			
-			pid = fork();
-			if(pid == 0){
-				char *args[] = {"cat",resto,NULL}; 
-				execvp("./cat",args);
-				
-			 
-			}
-			wait(NULL);
-		}
-		//remover directorio
-		else if(strcmp(token,"rmdir") == 0){
-			
-			
-			pid = fork();
-			if(pid == 0){
-				char *args[] = {"rmdir",resto,NULL}; 
-				execvp("./rmdir",args);
-				
-			 
-			}
-			wait(NULL);
-		}
-		//cambiar permisos archivo
-		else if(strcmp(token,"chmod") == 0){
-			
-			
-			pid = fork();
-			if(pid == 0){
-				char *args[] = {"chmod",resto,NULL}; 
-				execvp("./chmod",args);
-				
-			 
-			}
-			wait(NULL);
-		}
-		//crear archivo
-		else if(strcmp(token,"touch") == 0){
-			
-			
-			pid = fork();
-			if(pid == 0){
-				char *args[] = {"touch",resto,NULL}; 
-				execvp("./touch",args);
-				
-			 
-			}
-			wait(NULL);
-		}
-		
-		else if(strcmp(token,"exit") == 0){
+		else {
 			seguir = 0;
 		}
 		
-		else{	
-			printf("\nComando incorecto\n");
-			
-		}
 		
 		
 		
