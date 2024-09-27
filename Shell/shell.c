@@ -33,12 +33,12 @@ int main(){
 		
 		if(strcmp(token,"help") == 0) {
 			printf("help (muestra los comandos)\n");
-			printf("\n");
+			printf("ls\n");
 			printf("mkdir (crea un directorio vacio)\n");
 			printf("rmdir (remueve el directorio,el mismo debe estar vacio)\n");
 			printf("touch (crea un archivo nuevo si no existe)\n");
 			printf("\n");
-
+			printf("\n");
 		}
 		else if(strcmp(token,"exit") != 0) {
 			

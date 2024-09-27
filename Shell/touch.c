@@ -16,6 +16,7 @@ int main(int argc, char *argv[]){
 		printf("Descripcion del error: %s\n",strerror(errno));
 	}
 	
+	
 	fclose(archivo);
 	
 	return 0;
