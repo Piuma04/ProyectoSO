@@ -13,7 +13,7 @@
 pthread_mutex_t renos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t elfos = PTHREAD_MUTEX_INITIALIZER;
 
-//sriven para ver quien desperto a santa
+//sirven para ver quien desperto a santa
 sem_t despertar; 
 sem_t despertar_reno; 
 sem_t despertar_elfo;
@@ -76,9 +76,11 @@ void *reno(void *arg){
 				sem_post(&despertar);
 				printf("llegue de vacaciones y soy el ultimo! ------------\n");
 		}
+		
 		else printf("llegue de vacaciones! --------------\n");
 	pthread_mutex_unlock(&renos);
 	sem_wait(&esperando_en_cabaña);
+	
 	pthread_exit(0);
 }
 
