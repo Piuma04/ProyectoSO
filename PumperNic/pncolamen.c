@@ -7,15 +7,14 @@
 #include <sys/msg.h>
 #include <sys/types.h>
 #include <string.h>
-#include <semaphore.h>
 #include <math.h>
-
 
 #define CLIENTE "\e[1;37m"
 #define CLIENTEVIP "\e[1;35m"
 #define PAPASCOL "\e[1;33m"
 #define BURGUERCOL "\e[1;31m"
 #define VEGANOCOL "\e[1;32m"
+
 #define VIP 1
 #define NORMAL 2
 #define VEGANO 3
@@ -43,10 +42,12 @@ const size_t longitud = sizeof(struct msgbuf) - sizeof(long);
 void cliente(){
 	srand(getpid());
 	struct msgbuf mOrden,mPedido;
+	srand(getpid());
 	int tipoCliente = (rand() % 2) +1;
+	int tipoMenu = (rand() % 3) + 3;
 	
-	mOrden.tipoMenu = PAPAS; //da un numero random entre 3 y 5, es decir, randomiza el menu
-	mOrden.tipoCliente = tipoCliente; //da un valor entre 0 y 1 , es decir, randomiza el hecho de si es vip o no
+	mOrden.tipoMenu = tipoMenu; //da un numero random entre 3 y 5, es decir, randomiza el menu
+	mOrden.tipoCliente = tipoCliente; //da un valor entre 1 y 2 , es decir, randomiza el hecho de si es vip o no
 	mOrden.nroCliente = getpid();
 	mOrden.mtype = mOrden.tipoCliente;
 	
@@ -110,7 +111,7 @@ void empHamburguesa(){
 	while(1){
 		msgrcv(qid,&mOrden,longitud,BURGER,0);
 		
-		printf(BURGUERCOL"Haciendo hamburguesa\n");
+		printf(BURGUERCOL"Haciendo hamburguesa para cliente %d\n",mOrden.nroCliente);
 		fflush(stdout);
 		sleep(2);
 		
@@ -157,7 +158,7 @@ void empVegano(){
 	while(1){
 		msgrcv(qid,&mOrden,longitud,VEGANO,0);
 		
-		printf(VEGANOCOL"Haciendo menu vegano\n");
+		printf(VEGANOCOL"Haciendo menu vegano para cliente %d\n",mOrden.nroCliente);
 		fflush(stdout);
 		sleep(2);
 		
