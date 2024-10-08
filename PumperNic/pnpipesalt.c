@@ -9,6 +9,8 @@
 #include <string.h>
 #include <math.h>
 #include <fcntl.h>
+#include <semaphore.h>
+#include <errno.h>
 
 #define CLIENTE "\e[1;37m"
 #define CLIENTEVIP "\e[1;35m"
@@ -20,12 +22,18 @@
 #define VEGANO 3
 #define BURGER 4
 #define PAPAS 5
-#define CANT_CLIENTES 2
+#define CANT_CLIENTES 5
 #define CANT_EMPLEADOS 5 
 
 int pipeBurguer[2], pipePapas[2], pipeVegano[2];
 int pipeClVip[2], pipeCl[2];
-int pipeEntregaBurger[2], pipeEntregaPapas[2], pipeEntregaVegano[2];
+int pipeEntrega[2];
+int pipeConfEntreg[2];
+const char *sem_name = "/mi_sem";
+const char *sem_name_2 = "/mi_sem_2";
+sem_t *semEntrega;
+sem_t *semRecogida;	
+	
 
 struct msgbuf {
 
@@ -52,15 +60,13 @@ void cliente(){
 	close(pipeVegano[1]);
 	close(pipePapas[0]);
 	close(pipePapas[1]);
-	close(pipeEntregaBurger[1]);
-	close(pipeEntregaPapas[1]);
-	close(pipeEntregaVegano[1]);
+	close(pipeEntrega[1]);
 	
 	
 	srand(getpid());
 	struct msgbuf mOrden,mPedido;
-	int tipoCliente = (rand() % 2) +1;
-	int tipoMenu = PAPAS;
+	int tipoCliente = rand() %2 +1;
+	int tipoMenu = rand() %3 +3;
 	int nroCliente = getpid();
 	mOrden.tipoMenu = tipoMenu; //da un numero random entre 3 y 5, es decir, randomiza el menu
 	mOrden.tipoCliente = tipoCliente; //da un valor entre 0 y 1 , es decir, randomiza el hecho de si es vip o no
@@ -85,33 +91,23 @@ void cliente(){
 	}
 
 	int obtenido = 0;	
-	//seccion de retiro
-	switch(tipoMenu){
+
 	
-	case PAPAS:
+	sleep(2);
+
 		while(!obtenido){
-			if(read(pipeEntregaPapas[0], &mPedido, pedido) > 0 && mPedido.nroCliente == nroCliente) obtenido  = 1;
+			
+			
+			sem_wait(semRecogida);
+			
+			if(read(pipeEntrega[0], &mPedido, pedido) > 0 && mPedido.nroCliente == nroCliente) {  obtenido  = 1;}
+				
+			write(pipeConfEntreg[1],&obtenido,sizeof(int));
+			
+			sem_post(semRecogida);
 			
 		}
-		break;
-	case BURGER:
-		while(!obtenido){
-			if(read(pipeEntregaPapas[0], &mPedido, pedido) > 0 && mPedido.nroCliente == nroCliente) obtenido  = 1;
-			
-		}
-		read(pipeEntregaBurger[0], &mPedido, pedido);
-		break;
-	case VEGANO:
-		while(!obtenido){
-			if(read(pipeEntregaPapas[0], &mPedido, pedido) > 0 && mPedido.nroCliente == nroCliente) obtenido  = 1;
-			
-		}
-		read(pipeEntregaVegano[0], &mPedido, pedido);
-		break;
-	default: 
-		("error, recibio un menu no existente \n");
-		break;
-	}
+	
 	
 	if(tipoCliente == VIP)
 		printf(CLIENTEVIP"Cliente VIP %d recibiendo menu %d, el cliente es %d\n",mPedido.nroCliente,mPedido.tipoMenu,getpid());
@@ -119,7 +115,7 @@ void cliente(){
 		printf(CLIENTE"Cliente %d recibiendo menu %d, el cliente es %d\n",mPedido.nroCliente,mPedido.tipoMenu,getpid());
 		
 	fflush(stdout);	
-	sleep(5);
+	
 	exit(0);
 	
 	
@@ -132,12 +128,8 @@ void despachador(){
 	close(pipeBurguer[0]);
 	close(pipeVegano[0]);
 	close(pipePapas[0]);
-	close(pipeEntregaBurger[1]);
-	close(pipeEntregaPapas[1]);
-	close(pipeEntregaVegano[1]);
-	close(pipeEntregaBurger[0]);
-	close(pipeEntregaPapas[0]);
-	close(pipeEntregaVegano[0]);
+	close(pipeEntrega[1]);
+	close(pipeEntrega[0]);
 	
 	struct msgbuf mOrden, mPrep;
 
@@ -174,7 +166,7 @@ void despachador(){
 		
 		}
 		
-		sleep(2);
+		
 	}
 	exit(0);
 	
@@ -192,10 +184,7 @@ void empHamburguesa(){
 	close(pipePapas[1]);
 	close(pipeVegano[0]);
 	close(pipePapas[0]);
-	close(pipeEntregaPapas[1]);
-	close(pipeEntregaVegano[1]);
-	close(pipeEntregaPapas[0]);
-	close(pipeEntregaVegano[0]);
+	close(pipeEntrega[0]);
 	
 	
 	struct msgbuf mOrden, mPedido;
@@ -203,16 +192,24 @@ void empHamburguesa(){
 	while(1){
 		read(pipeBurguer[0],&mOrden,pedido);
 		
-		printf(BURGUERCOL"Haciendo hamburguesa\n");
+		printf(BURGUERCOL"Haciendo hamburguesa para cliente %d\n",mOrden.nroCliente);
 		fflush(stdout);
-		sleep(2);
 		
-	
+		
+	sleep(2);
 		mPedido.tipoMenu = BURGER;
 		mPedido.tipoCliente = mOrden.tipoCliente;
 		mPedido.nroCliente = mOrden.nroCliente;
 		
-		write(pipeEntregaBurger[1],&mPedido,pedido);
+		int pudeEntregar = 0;
+		sem_wait(semEntrega);
+		while(!pudeEntregar){
+			
+			write(pipeEntrega[1],&mPedido,pedido);
+			read(pipeConfEntreg[0],&pudeEntregar,sizeof(int));
+		}
+		
+		sem_post(semEntrega);
 	
 	}
 	exit(0);
@@ -232,10 +229,7 @@ void empPapas(int empleado){
 	close(pipePapas[1]);
 	close(pipeVegano[0]);
 	close(pipeBurguer[0]);
-	close(pipeEntregaBurger[1]);
-	close(pipeEntregaVegano[1]);
-	close(pipeEntregaBurger[0]);
-	close(pipeEntregaVegano[0]);
+	
 	
 	struct msgbuf mOrden, mPedido;
 	
@@ -244,13 +238,22 @@ void empPapas(int empleado){
 		
 		printf(PAPASCOL"Haciendo papas fritas (empleado %d) para cliente %d\n",empleado,mOrden.nroCliente);
 		fflush(stdout);
-		sleep(2);
 		
+		sleep(2);
 		mPedido.tipoMenu = PAPAS;
 		mPedido.tipoCliente = mOrden.tipoCliente;
 		mPedido.nroCliente = mOrden.nroCliente;
 		
-		write(pipeEntregaPapas[1],&mPedido,pedido);
+		
+		int pudeEntregar = 0;
+		sem_wait(semEntrega);
+		while(!pudeEntregar){
+			
+			write(pipeEntrega[1],&mPedido,pedido);
+			read(pipeConfEntreg[0],&pudeEntregar,sizeof(int));
+		}
+		
+		sem_post(semEntrega);
 	
 	}
 	exit(0);
@@ -269,27 +272,32 @@ void empVegano(){
 	close(pipePapas[1]);
 	close(pipePapas[0]);
 	close(pipeBurguer[0]);
-	close(pipeEntregaBurger[1]);
-	close(pipeEntregaPapas[1]);
-	close(pipeEntregaBurger[0]);
-	close(pipeEntregaPapas[0]);
+	close(pipeEntrega[0]);
 	
 	struct msgbuf mOrden, mPedido;
 	
 	while(1){
 		read(pipeVegano[0],&mOrden,pedido);
 		
-		printf(VEGANOCOL"Haciendo menu vegano\n");
+		printf(VEGANOCOL"Haciendo menu vegano para cliente %d\n",mOrden.nroCliente);
 		fflush(stdout);
+		
+		
 		sleep(2);
-		
-		
 		mPedido.tipoMenu = VEGANO;
 		mPedido.tipoCliente = mOrden.tipoCliente;
 		mPedido.nroCliente = mOrden.nroCliente;
 		
-		write(pipeEntregaVegano[1],&mPedido,pedido);
-	
+		int pudeEntregar = 0;
+		sem_wait(semEntrega);
+		while(!pudeEntregar){
+			
+			write(pipeEntrega[1],&mPedido,pedido);
+			read(pipeConfEntreg[0],&pudeEntregar,sizeof(int));
+		}
+		
+		sem_post(semEntrega);
+		
 	}
 	exit(0);
 	
@@ -299,28 +307,30 @@ void empVegano(){
 
 int main(){
 	
-	pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
+	
 
 	
-	
+	pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
+	semEntrega = sem_open(sem_name, O_CREAT , 0644, 1); //inicia con 1, es decir,el primer wait no importa
+	semRecogida  = sem_open(sem_name_2, O_CREAT , 0644,1);
+	if(semEntrega == SEM_FAILED || semRecogida == SEM_FAILED) printf("problemas en el paraiso %s\n",strerror(errno));
 	if(pipe(pipeBurguer) == -1){ return 1; }
 	
 	if(pipe(pipePapas) == -1){ return 1; }
 	
     if(pipe(pipeVegano) == -1){ return 1; }
     
-    if(pipe(pipeEntregaBurger) == -1){ return 1; }
-    
-    if(pipe(pipeEntregaPapas) == -1){ return 1; }
-    
-    if(pipe(pipeEntregaVegano) == -1){ return 1; }
+    if(pipe(pipeEntrega) == -1){ return 1; }
     
     if(pipe(pipeCl) == -1){ return 1; }
     
     if(pipe(pipeClVip) == -1){ return 1; }
+    
+    if(pipe(pipeConfEntreg) == -1){ return 1; }
 	
 	fcntl(pipeCl[0], F_SETFL,O_NONBLOCK);
     fcntl(pipeClVip[0], F_SETFL,O_NONBLOCK);
+    
 	
 	//despachador
 	pidEmpleados[0] = fork();
@@ -361,7 +371,9 @@ int main(){
 	for(int j = 0; j<CANT_CLIENTES; j++){
 		pidClientes[j] = fork();
 		if(pidClientes[j] == 0){
+		
 			cliente();
+			
 		
 		}
 	}
@@ -371,6 +383,7 @@ int main(){
 	for(int c = 0; c<CANT_CLIENTES; c++){
 		int status;
 		waitpid(pidClientes[c],&status,0);
+		
 	}
 	
 	for(int e = 0; e<CANT_EMPLEADOS; e++){
@@ -378,7 +391,12 @@ int main(){
 		kill(pidEmpleados[e],SIGTERM);
 	}
 
-
+	sem_close(semEntrega);
+	sem_close(semRecogida);
+	sem_unlink(sem_name); 
+	printf(" %s\n",strerror(errno));
+	sem_unlink(sem_name_2);
+	printf(" %s\n",strerror(errno));
 	
 
 	return 0;
