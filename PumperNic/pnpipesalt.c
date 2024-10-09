@@ -29,10 +29,9 @@ int pipeBurguer[2], pipePapas[2], pipeVegano[2];
 int pipeClVip[2], pipeCl[2];
 int pipeEntrega[2];
 int pipeConfEntreg[2];
-const char *sem_name = "/mi_sem";
-const char *sem_name_2 = "/mi_sem_2";
-sem_t *semEntrega;
-sem_t *semRecogida;	
+
+
+	
 	
 
 struct msgbuf {
@@ -95,18 +94,15 @@ void cliente(){
 	
 	sleep(2);
 
-		while(!obtenido){
+		
 			
 			
-			sem_wait(semRecogida);
+		
 			
-			if(read(pipeEntrega[0], &mPedido, pedido) > 0 && mPedido.nroCliente == nroCliente) {  obtenido  = 1;}
+		read(pipeEntrega[0], &mPedido, pedido);
 				
-			write(pipeConfEntreg[1],&obtenido,sizeof(int));
 			
-			sem_post(semRecogida);
-			
-		}
+	}
 	
 	
 	if(tipoCliente == VIP)
@@ -288,15 +284,11 @@ void empVegano(){
 		mPedido.tipoCliente = mOrden.tipoCliente;
 		mPedido.nroCliente = mOrden.nroCliente;
 		
-		int pudeEntregar = 0;
-		sem_wait(semEntrega);
-		while(!pudeEntregar){
-			
-			write(pipeEntrega[1],&mPedido,pedido);
-			read(pipeConfEntreg[0],&pudeEntregar,sizeof(int));
-		}
 		
-		sem_post(semEntrega);
+			
+		write(pipeEntrega[1],&mPedido,pedido);
+		read(pipeConfEntreg[0],&pudeEntregar,sizeof(int));
+		
 		
 	}
 	exit(0);
@@ -311,9 +303,8 @@ int main(){
 
 	
 	pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
-	semEntrega = sem_open(sem_name, O_CREAT , 0644, 1); //inicia con 1, es decir,el primer wait no importa
-	semRecogida  = sem_open(sem_name_2, O_CREAT , 0644,1);
-	if(semEntrega == SEM_FAILED || semRecogida == SEM_FAILED) printf("problemas en el paraiso %s\n",strerror(errno));
+	
+	
 	if(pipe(pipeBurguer) == -1){ return 1; }
 	
 	if(pipe(pipePapas) == -1){ return 1; }

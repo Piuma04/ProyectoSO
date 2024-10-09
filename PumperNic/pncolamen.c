@@ -20,6 +20,9 @@
 #define VEGANO 3
 #define BURGER 4
 #define PAPAS 5
+#define VEGANOL 6
+#define BURGERL 7
+#define PAPASL 8
 #define CANT_CLIENTES 3
 #define CANT_EMPLEADOS 5
 
@@ -31,8 +34,6 @@ struct msgbuf {
 	long tipoCliente;
 	
 	long tipoMenu;
-	
-	long nroCliente;
 
 
 };
@@ -40,34 +41,45 @@ struct msgbuf {
 const size_t longitud = sizeof(struct msgbuf) - sizeof(long);
 
 void cliente(){
+	
 	srand(getpid());
 	struct msgbuf mOrden,mPedido;
 	srand(getpid());
+	/*
+	int entro = 0;
+	do{
+		
+		entro = (rand() % 10) +1
+		entro = entro == 10 ? 1 : 0;
+		
+	}while(!entro);
+	*/
 	int tipoCliente = (rand() % 2) +1;
-	int tipoMenu = (rand() % 3) + 3;
+	int tipoMenu = BURGER;
+	
+	
 	
 	mOrden.tipoMenu = tipoMenu; //da un numero random entre 3 y 5, es decir, randomiza el menu
 	mOrden.tipoCliente = tipoCliente; //da un valor entre 1 y 2 , es decir, randomiza el hecho de si es vip o no
-	mOrden.nroCliente = getpid();
-	mOrden.mtype = mOrden.tipoCliente;
+	mOrden.mtype = tipoCliente;
 	
 	
 	if(tipoCliente == VIP)
-		printf(CLIENTEVIP"Cliente VIP %d enviando menu %d\n",mOrden.nroCliente,mOrden.tipoMenu);
+		printf(CLIENTEVIP"Cliente VIP enviando menu %d\n",mOrden.tipoMenu);
 		
 	else 
-		printf(CLIENTE"Cliente %d enviando menu %d\n",mOrden.nroCliente,mOrden.tipoMenu);
+		printf(CLIENTE"Cliente  enviando menu %d\n",mOrden.tipoMenu);
 	fflush(stdout);
 		
 	msgsnd(qid,&mOrden,longitud,0);
 	
-	
-	msgrcv(qid,&mPedido,longitud,getpid(),0);
-	
+	tipoMenu += 3;
+	msgrcv(qid,&mPedido,longitud,tipoMenu,0);
+	tipoMenu-=3;
 	if(mPedido.tipoCliente == VIP)
-		printf(CLIENTEVIP"Cliente VIP %d recibiendo menu %d\n",mPedido.nroCliente,mPedido.tipoMenu);
+		printf(CLIENTEVIP"Cliente VIP que pidio %d recibiendo menu %d\n",tipoMenu,mPedido.tipoMenu);
 	else
-		printf(CLIENTE"Cliente %d recibiendo menu %d\n",mPedido.nroCliente,mPedido.tipoMenu);
+		printf(CLIENTE"Cliente que pidio %d recibiendo menu %d\n",tipoMenu,mPedido.tipoMenu);
 	fflush(stdout);
 	
 	sleep(5);
@@ -82,21 +94,20 @@ void despachador(){
 	int recibioPedido;
 	while(1){
 		
-		recibioPedido = 0;
-		if(msgrcv(qid,&mOrden,longitud,VIP,IPC_NOWAIT) == -1){
-				if(msgrcv(qid,&mOrden,longitud,NORMAL,IPC_NOWAIT) != -1) {recibioPedido = 1; }
-		}
-		else recibioPedido = 1; 
+	
 		
-		if(recibioPedido){
-			mPrep.mtype = mOrden.tipoMenu;
-			mPrep.tipoMenu = mOrden.tipoMenu;
-			mPrep.tipoCliente = mOrden.tipoCliente;
-			mPrep.nroCliente = mOrden.nroCliente;
-			
-			msgsnd(qid,&mPrep,longitud,0);
+		msgrcv(qid,&mOrden,longitud,-2,0);
 		
-		}
+		
+		
+		
+		mPrep.mtype = mOrden.tipoMenu;
+		mPrep.tipoMenu = mOrden.tipoMenu;
+		mPrep.tipoCliente = mOrden.tipoCliente;
+		
+		
+		msgsnd(qid,&mPrep,longitud,0);
+		
 		
 		sleep(2);
 	}
@@ -107,19 +118,19 @@ void despachador(){
 
 void empHamburguesa(){
 	struct msgbuf mOrden, mPedido;
-	
+	int tipo;
 	while(1){
 		msgrcv(qid,&mOrden,longitud,BURGER,0);
 		
-		printf(BURGUERCOL"Haciendo hamburguesa para cliente %d\n",mOrden.nroCliente);
+		printf(BURGUERCOL"Haciendo hamburguesa para cliente \n");
 		fflush(stdout);
 		sleep(2);
-		
-		
-		mPedido.mtype = mOrden.nroCliente;
+		 tipo = mOrden.tipoCliente +3;
+		printf("%d\n",tipo);
+		mPedido.mtype = tipo;
 		mPedido.tipoMenu = BURGER;
 		mPedido.tipoCliente = mOrden.tipoCliente;
-		mPedido.nroCliente = mOrden.nroCliente;
+		
 		
 		msgsnd(qid,&mPedido,longitud,0);
 	
@@ -131,18 +142,19 @@ void empHamburguesa(){
 //FIJARSE SI HAY QUE SINCRONIZARLO CON SEMAFOROS
 void empPapas(int empleado){
 	struct msgbuf mOrden, mPedido;
-	
+	int tipo;
 	while(1){
 		msgrcv(qid,&mOrden,longitud,PAPAS,0);
 		
-		printf(PAPASCOL"Haciendo papas fritas (empleado %d) para cliente %d\n",empleado,mOrden.nroCliente);
+		printf(PAPASCOL"Haciendo papas fritas (empleado %d) para cliente \n",empleado);
 		fflush(stdout);
 		sleep(2);
 		
-		mPedido.mtype = mOrden.nroCliente;
+		tipo = mOrden.tipoCliente +3;
+		
+		mPedido.mtype = tipo;
 		mPedido.tipoMenu = PAPAS;
 		mPedido.tipoCliente = mOrden.tipoCliente;
-		mPedido.nroCliente = mOrden.nroCliente;
 		
 		msgsnd(qid,&mPedido,longitud,0);
 	
@@ -154,18 +166,20 @@ void empPapas(int empleado){
 
 void empVegano(){
 	struct msgbuf mOrden, mPedido;
-	
+	int tipo;
 	while(1){
 		msgrcv(qid,&mOrden,longitud,VEGANO,0);
 		
-		printf(VEGANOCOL"Haciendo menu vegano para cliente %d\n",mOrden.nroCliente);
+		printf(VEGANOCOL"Haciendo menu vegano para cliente %d\n");
 		fflush(stdout);
 		sleep(2);
 		
-		mPedido.mtype = mOrden.nroCliente;
+		tipo = mOrden.tipoCliente +3;
+		
+		mPedido.mtype = tipo;
 		mPedido.tipoMenu = VEGANO;
 		mPedido.tipoCliente = mOrden.tipoCliente;
-		mPedido.nroCliente = mOrden.nroCliente;
+		
 		
 		msgsnd(qid,&mPedido,longitud,0);
 	
