@@ -41,6 +41,7 @@ int main(){
 					printf("touch (crea un archivo nuevo si no existe)\n");
 					printf("chmod\n");
 					printf("cat\n");
+					printf("rmfile (remueve un archivo)\n");
 				}
 				else if(strcmp(token,"exit") != 0) {
 					

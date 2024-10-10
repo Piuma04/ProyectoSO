@@ -41,7 +41,7 @@ struct msgbuf {
 	
 	long tipoMenu;
 	
-	long nroCliente;
+	
 
 
 };
