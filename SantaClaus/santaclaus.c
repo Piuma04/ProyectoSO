@@ -6,8 +6,8 @@
 #include <string.h>
 #include <errno.h>
 #include <semaphore.h>
-#define CANT_ELFO 3
-#define CANT_RENO 4
+#define CANT_ELFO 9
+#define CANT_RENO 9
 
 
 
@@ -20,7 +20,7 @@ sem_t despertar;
 
 
 sem_t otros_elfos; //limita la cantidad de elfos que pueden pedir ayuda
-
+sem_t otros_renos; //limita la cantidad de renos que pueden haber por trineo 
 
 sem_t elf_con_dif ;//contador
 sem_t ren_vuelta_vacaciones; //contador
@@ -34,9 +34,9 @@ void *elfo(void *arg){
 	int minum = pthread_self();
 	
 	int dificultad_al_hacer_juguete;
-	for(int h = 0; h<2; h++){
+	while(1){
 		dificultad_al_hacer_juguete = (int) (rand() % 10 + 1 ); //hay un 10% de prob de necesitar ayuda
-		printf("%d\n",dificultad_al_hacer_juguete);
+		
 		
 		if(dificultad_al_hacer_juguete == 4){  //si necesita ayuda
 			
@@ -49,7 +49,6 @@ void *elfo(void *arg){
 			
 				sem_wait(&elf_con_dif);
 				if(sem_trywait(&elf_con_dif) != 0){
-					printf("a\n");
 					sem_post(&despertar); 		
 				}else
 				sem_post(&elf_con_dif);
@@ -72,13 +71,16 @@ void *elfo(void *arg){
 			
 		}
 		printf("hacer juguete elfo %d\n",minum);
+		sleep(2);
 	}	
 	pthread_exit(0);
 }
 
 
 void *reno(void *arg){
-	//sleep((int)(rand() % 10 + 1)); //simula el hecho de estar de vacaciones
+	while(1){
+	sleep((int)(rand() % 10 + 1)); //simula el hecho de estar de vacaciones
+	sem_wait(&otros_renos);
 	pthread_mutex_lock(&renos);
 		sem_wait(&ren_vuelta_vacaciones);
 		if( sem_trywait(&ren_vuelta_vacaciones) != 0) {//si es el último
@@ -93,8 +95,21 @@ void *reno(void *arg){
 			sem_post(&ren_vuelta_vacaciones);
 		}
 	pthread_mutex_unlock(&renos);
+	
 	sem_wait(&esperando_en_cabaña);
 	
+	
+	
+	pthread_mutex_lock(&renos);
+
+				sem_wait(&ren_vuelta_vacaciones);
+				if(sem_trywait(&ren_vuelta_vacaciones) != 0){ //si soy el ultimo
+					for(int i = CANT_RENO; i>0; i--) {sem_post(&ren_vuelta_vacaciones); sem_post(&otros_renos);}	
+					printf("nos fuimos todos\n");
+				}else 
+					sem_post(&ren_vuelta_vacaciones);
+	pthread_mutex_unlock(&renos);
+	}
 	pthread_exit(0);
 }
 
@@ -106,7 +121,8 @@ void *santa(void *arg){
         if(sem_trywait(&ren_vuelta_vacaciones) != 0){ //veo si no falta ningun reno
 			
 				printf("trineo hecho ! ------\n"); 
-				for(int i = 0; i <= CANT_RENO; i++) {
+				for(int i = 0; i < CANT_RENO; i++) {
+					sem_post(&ren_vuelta_vacaciones);
 					sem_post(&esperando_en_cabaña);
 				}
 		
@@ -141,10 +157,10 @@ int main(){
 	sem_init(&elf_con_dif ,0,3);
 	sem_init(&esperando_santa_elf,0,0);
 	sem_init(&esperando_en_cabaña,0,0);
+	sem_init(&otros_renos,0,CANT_RENO);
 	sem_init(&ren_vuelta_vacaciones,0,CANT_RENO);
 
-	
-	
+
 	
 	pthread_create(&santa_claus,NULL,santa,NULL);
 	
