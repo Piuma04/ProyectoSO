@@ -1,91 +1,312 @@
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
-#include <sys/types.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
-#include <unistd.h>
-#include <stdarg.h>
-#include <sys/wait.h>
+#include <sys/types.h>
+#include <string.h>
+#include <math.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <errno.h>
 
-//defino los files descriptors para los pipes
-int fdCliRec[2];
-int fdRecKit[2];
-int fdKitCli[2];
-char *pedido;
+#define CLIENTE "\e[1;37m"
+#define CLIENTEVIP "\e[1;35m"
+#define PAPASCOL "\e[1;33m"
+#define BURGUERCOL "\e[1;31m"
+#define VEGANOCOL "\e[1;32m"
+#define VIP 1
+#define NORMAL 2
+#define VEGANO 3
+#define BURGER 4
+#define PAPAS 5
+#define CANT_CLIENTES 5
+#define CANT_EMPLEADOS 5 
 
-void pedir(){
-    char *pedido = "pedido tomado";
-    close(fdCliRec[0]);
-    write(fdCliRec[1], pedido, strlen(pedido));
-    close(fdCliRec[1]); // El cliente terminó
-    printf("El cliente pidió su comida \n");
+int pipeBurguer[2], pipePapas[2], pipeVegano[2];
+int pipeClVip[2], pipeCl[2];
+int pipeEntregaB[2], pipeEntregaP[2], pipeEntregaV[2];
+int pedidoEnviado = 0;
+
+struct msgbuf {
+    long tipoCliente;
+    long tipoMenu;
+};
+
+const size_t pedido = sizeof(struct msgbuf);
+
+void cliente(){
+    // Cerramos los pipes que no necesitamos
+    close(pipeCl[0]);
+    close(pipeClVip[0]);
+    close(pipeBurguer[0]);
+    close(pipeBurguer[1]);
+    close(pipeVegano[0]);
+    close(pipeVegano[1]);
+    close(pipePapas[0]);
+    close(pipePapas[1]);
+    close(pipeEntregaB[1]);
+    close(pipeEntregaP[1]);
+    close(pipeEntregaV[1]);
+    
+
+    srand(getpid());
+    struct msgbuf mOrden, mPedido;
+    int tipoCliente = rand() % 2 + 1;
+    int tipoMenu = rand() % 3 + 3;
+    mOrden.tipoMenu = tipoMenu;
+    mOrden.tipoCliente = tipoCliente;
+
+    if (tipoCliente == VIP) {
+        close(pipeCl[1]);
+        write(pipeClVip[1], &mOrden, pedido);
+        printf(CLIENTEVIP"Cliente VIP enviando menu %d\n", mOrden.tipoMenu);
+        fflush(stdout);
+    } else {
+        close(pipeClVip[1]);
+        write(pipeCl[1], &mOrden, pedido);
+        printf(CLIENTE"Cliente enviando menu %d\n", mOrden.tipoMenu);
+        fflush(stdout);
+    }
+  
+
+    sleep(2);
+    
+    switch(mOrden.tipoMenu){
+        case PAPAS:
+            read(pipeEntregaP[0], &mPedido, pedido);
+            break;
+            
+        case BURGER:
+            read(pipeEntregaB[0], &mPedido, pedido);
+            break;
+            
+        case VEGANO:
+            read(pipeEntregaV[0], &mPedido, pedido);
+            break;
+        }
+    
+    if (tipoCliente == VIP) {
+        printf(CLIENTEVIP"Cliente VIP recibiendo menu %d\n", mPedido.tipoMenu);
+        fflush(stdout);
+    } else {
+        printf(CLIENTE"Cliente recibiendo menu %d\n", mPedido.tipoMenu);
+        fflush(stdout);
+    }
+    
+    exit(0);
 }
 
-void tomarPedido(){
-    close(fdCliRec[1]);
-    char buffer[100];
-    read(fdCliRec[0], buffer, sizeof(buffer));
-    printf("Recepcion: Pedido recibido: %s \n", buffer);
-    close(fdCliRec[0]); // El recepcionista termina de leer
+void despachador(){
+    close(pipeCl[1]);
+    close(pipeClVip[1]);
+    close(pipeBurguer[0]);
+    close(pipeVegano[0]);
+    close(pipePapas[0]);
+    close(pipeEntregaB[0]);
+    close(pipeEntregaB[1]);
+    close(pipeEntregaP[0]);
+    close(pipeEntregaP[1]);
+    close(pipeEntregaV[0]);
+    close(pipeEntregaV[1]);
 
-    // Envía a la cocina
-    close(fdRecKit[0]);
-    write(fdRecKit[1], buffer, strlen(buffer));
-    close(fdRecKit[1]);
-    printf("El recepcionista envió el pedido del cliente a la cocina \n");
+    struct msgbuf mOrden, mPrep;
+
+    int recibioPedido;
+    while(1){
+        recibioPedido = 0;
+        if(read(pipeClVip[0], &mOrden, pedido) == -1){
+            if(read(pipeCl[0], &mOrden, pedido) != -1) {
+                recibioPedido = 1;
+            }
+        } else {
+            recibioPedido = 1;
+        }
+
+        if(recibioPedido){
+            mPrep.tipoMenu = mOrden.tipoMenu;
+            mPrep.tipoCliente = mOrden.tipoCliente;
+
+            switch(mOrden.tipoMenu){
+                case PAPAS:
+                {
+                    write(pipePapas[1], &mPrep, pedido);
+                    break;
+                }
+                case BURGER:
+                {
+                    write(pipeBurguer[1], &mPrep, pedido);
+                    break;
+                }
+                case VEGANO:
+                {
+                    write(pipeVegano[1], &mPrep, pedido);
+                    break;
+                }
+                default: 
+                    printf("error, despachador recibio un menu no existente \n");
+                    break;
+            }
+            recibioPedido = 0;
+        }
+    }
+    exit(0);
 }
 
-void cocinar(){
-    close(fdRecKit[1]);
-    char buffer[100];
-    read(fdRecKit[0], buffer, sizeof(buffer));
-    printf("La cocina está preparando el pedido: %s \n", buffer);
-    close(fdRecKit[0]); // La cocina termina de leer
+void empHamburguesa(){
+    close(pipeCl[0]);
+    close(pipeCl[1]);
+    close(pipeBurguer[1]);
+    close(pipeClVip[0]);
+    close(pipeClVip[1]);
+    close(pipeVegano[0]);
+    close(pipeVegano[1]);
+    close(pipePapas[0]);
+    close(pipePapas[1]);
+    close(pipeEntregaB[0]);
+    close(pipeEntregaP[0]);
+    close(pipeEntregaP[1]);
+    close(pipeEntregaV[0]);
+    close(pipeEntregaV[1]);
 
-    // Cocina pasa la comida al cliente
-    close(fdKitCli[0]);
-    write(fdKitCli[1], buffer, strlen(buffer));
-    close(fdKitCli[1]);
-    printf("La cocina tiene listo el pedido del cliente \n");
+    struct msgbuf mOrden, mPedido;
+
+    while(1){
+        read(pipeBurguer[0], &mOrden, pedido);
+        
+        printf(BURGUERCOL"Haciendo hamburguesa \n");
+        fflush(stdout);
+
+        sleep(2);
+
+        mPedido.tipoMenu = BURGER;
+        mPedido.tipoCliente = mOrden.tipoCliente;
+        write(pipeEntregaB[1], &mPedido, pedido);
+    }
+    exit(0);
 }
 
-void tomarComida(){
-    close(fdKitCli[1]);
-    char buffer[100];
-    read(fdKitCli[0], buffer, sizeof(buffer));
-    printf("El cliente se va feliz con su comida: %s\n", buffer);
-    close(fdKitCli[0]); // El cliente termina de leer
+void empPapas(int empleado){
+    close(pipeCl[0]);
+    close(pipeClVip[0]);
+    close(pipeCl[1]);
+    close(pipeClVip[1]);
+    close(pipeBurguer[0]);
+    close(pipeBurguer[1]);
+    close(pipePapas[1]);
+    close(pipeVegano[1]);
+    close(pipeVegano[0]);
+    close(pipeEntregaB[0]);
+    close(pipeEntregaB[1]);
+    close(pipeEntregaP[0]);
+    close(pipeEntregaV[0]);
+    close(pipeEntregaV[1]);
+
+    struct msgbuf mOrden, mPedido;
+
+    while(1){
+        read(pipePapas[0], &mOrden, pedido);
+
+        printf(PAPASCOL"Haciendo papas fritas (empleado %d)\n", empleado);
+        fflush(stdout);
+
+        sleep(2);
+        mPedido.tipoMenu = PAPAS;
+        mPedido.tipoCliente = mOrden.tipoCliente;
+
+        write(pipeEntregaP[1], &mPedido, pedido);
+    }
+    exit(0);
 }
 
+void empVegano(){
+    close(pipeCl[0]);
+    close(pipeClVip[0]);
+    close(pipeCl[1]);
+    close(pipeClVip[1]);
+    close(pipeBurguer[0]);
+    close(pipeBurguer[1]);
+    close(pipePapas[0]);
+    close(pipePapas[1]);
+    close(pipeVegano[1]);
+    close(pipeEntregaB[0]);
+    close(pipeEntregaB[1]);
+    close(pipeEntregaP[0]);
+    close(pipeEntregaP[1]);
+    close(pipeEntregaV[0]);
+
+    struct msgbuf mOrden, mPedido;
+
+    while(1){
+        read(pipeVegano[0], &mOrden, pedido);
+
+        printf(VEGANOCOL"Haciendo menu vegano \n");
+        fflush(stdout);
+
+        sleep(2);
+        mPedido.tipoMenu = VEGANO;
+        mPedido.tipoCliente = mOrden.tipoCliente;
+
+        write(pipeEntregaV[1], &mPedido, pedido);
+    }
+    exit(0);
+}
 
 int main(){
-    pipe(fdCliRec);
-    pipe(fdRecKit);
-    pipe(fdKitCli);
+    pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
 
-    if(fork() == 0) {
-        pedir();
-        exit(0);
+    if(pipe(pipeBurguer) == -1){ return 1; }
+    if(pipe(pipePapas) == -1){ return 1; }
+    if(pipe(pipeVegano) == -1){ return 1; }
+    if(pipe(pipeCl) == -1){ return 1; }
+    if(pipe(pipeClVip) == -1){ return 1; }
+    if(pipe(pipeEntregaB) == -1){ return -1; }
+    if(pipe(pipeEntregaP) == -1){ return -1; }
+    if(pipe(pipeEntregaV) == -1){ return -1; }
+
+    fcntl(pipeCl[0], F_SETFL, O_NONBLOCK);
+    fcntl(pipeClVip[0], F_SETFL, O_NONBLOCK);
+
+    for(int j = 0; j < CANT_CLIENTES; j++){
+        pidClientes[j] = fork();
+        if(pidClientes[j] == 0){
+            cliente();
+        }
     }
 
-    if(fork() == 0) {
-        tomarPedido();
-        exit(0);
+    pidEmpleados[0] = fork();
+    if(pidEmpleados[0] == 0){
+        despachador();
     }
 
-    if(fork() == 0) {
-        cocinar();
-        exit(0);
+    pidEmpleados[1] = fork();
+    if(pidEmpleados[1] == 0){
+        empHamburguesa();
     }
 
-    if(fork() == 0) {
-        tomarComida();
-        exit(0);
+    for(int j = 1; j < 3; j++){
+        pidEmpleados[j + 1] = fork();
+        if(pidEmpleados[j + 1] == 0){
+            empPapas(j);
+        }
     }
 
-    for(int i = 0; i < 4; i++){
-        wait(NULL);
+    pidEmpleados[4]  = fork();
+    if(pidEmpleados[4] == 0){
+        empVegano();
     }
+
+    for(int c = 0; c < CANT_CLIENTES; c++){
+        int status;
+        waitpid(pidClientes[c], &status, 0);
+    }
+
+    for(int e = 0; e < CANT_EMPLEADOS; e++){
+        kill(pidEmpleados[e], SIGTERM);
+    }
+
+    printf(" %s\n", strerror(errno));
     return 0;
 }

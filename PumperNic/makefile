@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS =  -Wall -Wextra 
 
 # Lista de archivos fuente
-SOURCES = pnpipes.c pncolamen.c pnpipesalt.c  
+SOURCES = pnpipes.c pncolamen.c 
 
 # Generar una lista de ejecutables basada en los nombres de los archivos fuente
 EXECUTABLES = $(SOURCES:.c=)
