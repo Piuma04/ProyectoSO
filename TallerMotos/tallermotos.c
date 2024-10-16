@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <semaphore.h>
-#define CANTIDAD_MOTOS 5
+
 
 
 
@@ -13,11 +13,10 @@
 sem_t OP1,OP2,OP3, P, OP4;
 
 void *Rueda(void *arg){
-	int rueda_a_poner;
-	for(int i = 0; i<CANTIDAD_MOTOS*2; i++){
+	
+	while(1){
 		sem_wait(&OP1);
-			rueda_a_poner = (i % 2) + 1;
-			printf("poniendo rueda %d\n",rueda_a_poner);
+			printf("poniendo rueda \n");
 		sem_post(&OP2);
 	}
 	pthread_exit(0);
@@ -25,7 +24,7 @@ void *Rueda(void *arg){
 
 void *Chasis(void *arg){
 
-	for(int i = 0; i <CANTIDAD_MOTOS; i++){
+	while(1){
 		sem_wait(&OP2);
 		sem_wait(&OP2);
 			printf("poniendo chasis\n");
@@ -37,7 +36,7 @@ void *Chasis(void *arg){
 
 void *Motor(void *arg){
 
-	for(int i = 0; i <CANTIDAD_MOTOS; i++){
+	while(1){
 		sem_wait(&OP3);
 			printf("poniendo motor\n");
 		sem_post(&P);
@@ -48,7 +47,7 @@ void *Motor(void *arg){
 
 void *PintarVerde(void *arg){
 
-	for(int i = 0; i <CANTIDAD_MOTOS; i++){
+	while(1){
 		sem_wait(&P);
 			printf("pintando de verde\n");
 		sem_post(&OP4);
@@ -59,7 +58,7 @@ void *PintarVerde(void *arg){
 
 void *PintarRojo(void *arg){
 
-	for(int i = 0; i <CANTIDAD_MOTOS; i++){
+	while(1){
 		sem_wait(&P);
 			printf("pintando de rojo\n");
 		sem_post(&OP4);
@@ -70,11 +69,22 @@ void *PintarRojo(void *arg){
 
 void *EqExtra(void *arg){
 
-	for(int i = 0; i <CANTIDAD_MOTOS; i++){
+	while(1){
 		sem_wait(&OP4);
-		if(i%2 == 0) //es decir, si i es par (pasa 1 de cada 2 veces) recibe el equipamiento
-			printf("poniendo eq extra\n");
+		
+		printf("poniendo eq extra\n");
 		printf("\n");
+		
+		sleep(2);
+		sem_post(&OP1);
+		sem_post(&OP1);
+		
+		
+		sem_wait(&OP4);
+		
+		printf("\n");
+		
+		sleep(2);
 		sem_post(&OP1);
 		sem_post(&OP1);
 	}
@@ -107,10 +117,11 @@ int main(){
 	pthread_join(op2,NULL);
 	pthread_join(op3,NULL);
 	pthread_join(op4,NULL);
-	
-	pthread_cancel(pinturaV);
-	pthread_cancel(pinturaR);
+	pthread_join(pinturaV,NULL);
+	pthread_join(pinturaR,NULL);
 
+	
+	
 	sem_close(&OP1 );
 	sem_close(&OP2 );
 	sem_close(&OP3);
