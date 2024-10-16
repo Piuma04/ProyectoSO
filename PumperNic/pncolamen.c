@@ -24,8 +24,6 @@
 #define VEGANOL 6
 #define BURGERL 7
 #define PAPASL 8
-#define CLIENTES_EN_LOCAL 10
-#define MUCHOS_CLIENTES 3
 #define CANT_CLIENTES 4
 #define CANT_EMPLEADOS 5
 
@@ -87,25 +85,19 @@ void pedir(){
 void cliente(){
 	
 	
-	struct msgbuf mEntrada;
+
 	int ganas_de_esperar;
 	while(1){
 	srand(getpid());
 	
-	if(msgrcv(qid,&mEntrada,longitud,CLIENTES_EN_LOCAL,IPC_NOWAIT) == -1){  //es decir, si hay mucha gente
 		ganas_de_esperar = rand() % 10;
-		if(ganas_de_esperar == 1){ 
+		if(ganas_de_esperar >  0 ){ 
 			printf("tuvo ganas de esperar\n");
 			fflush(stdout);
 			pedir();  
 		} //10 % de probabilidades de que tenga ganas de esperar
 		else { printf("no quiso esperar\n"); fflush(stdout); }
-	}
-	else{
-		pedir();
-		mEntrada.mtype = CLIENTES_EN_LOCAL;
-		msgsnd(qid,&mEntrada,longitud,0);
-	}
+
 	sleep(2);
 
 }
@@ -220,7 +212,7 @@ int main(){
 	
 	key_t key;
 	
-	struct msgbuf  cant_clientes;
+
 	pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
 	key = ftok("/tmp",'e');
 	if(key == -1){printf("problemas en el paraiso %s\n",strerror(errno));}
@@ -229,17 +221,7 @@ int main(){
 	msgctl(qid,IPC_RMID,NULL);				//esto se hace para reinicia la cola, ya que al tener los ciclos while(1), al finalizar el programa no se borra la cola
 	qid = msgget(key, 0666 | IPC_CREAT);
 	
-	
-	// se considera que hay mucha gente cuando hay MUCHOS_CLIENTES en el local, esto lo que hace 
-	// es que envia un mensaje, el cual es leido por los clientes, si un cliente trata de leerlo
-	// y no puede, quiere decir que hay mucha gente, y podria decidir si entrar o no 
-	
-	cant_clientes.mtype = CLIENTES_EN_LOCAL;
-	for(int e = 0; e<MUCHOS_CLIENTES; e++){
-		
-		msgsnd(qid,&cant_clientes,longitud,0);
-	}
-	
+
 	
 	
 	
