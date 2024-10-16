@@ -79,7 +79,7 @@ void *elfo(void *arg){
 
 void *reno(void *arg){
 	while(1){
-	sleep((int)(rand() % 10 + 1)); //simula el hecho de estar de vacaciones
+	sleep((int)(rand() % 15 + 5)); //simula el hecho de estar de vacaciones
 	sem_wait(&otros_renos);
 	pthread_mutex_lock(&renos);
 		sem_wait(&ren_vuelta_vacaciones);

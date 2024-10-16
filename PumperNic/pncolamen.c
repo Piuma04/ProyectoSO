@@ -168,7 +168,7 @@ void empHamburguesa(){
 
 void empPapas(int empleado){
 	struct msgbuf mOrden, mPedido;
-	int tipo;
+	
 	while(1){
 		msgrcv(qid,&mOrden,longitud,PAPAS,0);
 		
@@ -176,7 +176,7 @@ void empPapas(int empleado){
 		fflush(stdout);
 	
 		
-		tipo = mOrden.tipoMenu +3;
+		
 		
 		mPedido.mtype = PAPASL;
 		mPedido.tipoMenu = PAPAS;
@@ -192,7 +192,7 @@ void empPapas(int empleado){
 
 void empVegano(){
 	struct msgbuf mOrden, mPedido;
-	int tipo;
+	
 	while(1){
 		msgrcv(qid,&mOrden,longitud,VEGANO,0);
 		
@@ -200,7 +200,7 @@ void empVegano(){
 		fflush(stdout);
 	
 		
-		tipo = mOrden.tipoMenu +3;
+		
 		
 		mPedido.mtype = VEGANOL;
 		mPedido.tipoMenu = VEGANO;
@@ -220,10 +220,13 @@ int main(){
 	
 	key_t key;
 	
-	struct msgbuf msg, cant_clientes;
+	struct msgbuf  cant_clientes;
 	pid_t pidEmpleados[CANT_EMPLEADOS], pidClientes[CANT_CLIENTES];
 	key = ftok("/tmp",'e');
 	if(key == -1){printf("problemas en el paraiso %s\n",strerror(errno));}
+	
+	qid = msgget(key, 0666 | IPC_CREAT);
+	msgctl(qid,IPC_RMID,NULL);				//esto se hace para reinicia la cola, ya que al tener los ciclos while(1), al finalizar el programa no se borra la cola
 	qid = msgget(key, 0666 | IPC_CREAT);
 	
 	

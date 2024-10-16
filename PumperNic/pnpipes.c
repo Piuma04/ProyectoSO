@@ -24,11 +24,13 @@
 #define PAPAS 5
 #define CANT_CLIENTES 5
 #define CANT_EMPLEADOS 5 
+#define MUCHOS_CLIENTES 3
 
 int pipeBurguer[2], pipePapas[2], pipeVegano[2];
 int pipeClVip[2], pipeCl[2];
 int pipeEntregaB[2], pipeEntregaP[2], pipeEntregaV[2];
-int pedidoEnviado = 0;
+int pipeClientesEnLocal[2];
+
 
 struct msgbuf {
     long tipoCliente;
@@ -37,21 +39,10 @@ struct msgbuf {
 
 const size_t pedido = sizeof(struct msgbuf);
 
-void cliente(){
-    // Cerramos los pipes que no necesitamos
-    close(pipeCl[0]);
-    close(pipeClVip[0]);
-    close(pipeBurguer[0]);
-    close(pipeBurguer[1]);
-    close(pipeVegano[0]);
-    close(pipeVegano[1]);
-    close(pipePapas[0]);
-    close(pipePapas[1]);
-    close(pipeEntregaB[1]);
-    close(pipeEntregaP[1]);
-    close(pipeEntregaV[1]);
-    
 
+void pedir(){
+
+    
     srand(getpid());
     struct msgbuf mOrden, mPedido;
     int tipoCliente = rand() % 2 + 1;
@@ -95,6 +86,42 @@ void cliente(){
         printf(CLIENTE"Cliente recibiendo menu %d\n", mPedido.tipoMenu);
         fflush(stdout);
     }
+
+
+}
+
+void cliente(){
+    // Cerramos los pipes que no necesitamos
+    close(pipeCl[0]);
+    close(pipeClVip[0]);
+    close(pipeBurguer[0]);
+    close(pipeBurguer[1]);
+    close(pipeVegano[0]);
+    close(pipeVegano[1]);
+    close(pipePapas[0]);
+    close(pipePapas[1]);
+    close(pipeEntregaB[1]);
+    close(pipeEntregaP[1]);
+    close(pipeEntregaV[1]);
+    
+    srand(getpid());
+	struct msgbuf hayClientes; 
+    int ganas_de_esperar;
+	if(read(pipeClientesEnLocal[0], &hayClientes, pedido)== -1){  //es decir, si hay mucha gente
+		ganas_de_esperar = rand() % 10;
+		if(ganas_de_esperar == 1){ 
+			printf("tuvo ganas de esperar\n");
+			fflush(stdout);
+			pedir();  
+		} //10 % de probabilidades de que tenga ganas de esperar
+		else { printf("no quiso esperar\n"); fflush(stdout); }
+	}
+	else{
+		pedir();
+		write(pipeClientesEnLocal[1], &hayClientes, pedido);
+	}
+	sleep(2);
+    
     
     exit(0);
 }
@@ -111,7 +138,9 @@ void despachador(){
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
-
+    close(pipeClientesEnLocal[0]);
+    close(pipeClientesEnLocal[1]);
+    
     struct msgbuf mOrden, mPrep;
 
     int recibioPedido;
@@ -170,6 +199,8 @@ void empHamburguesa(){
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
+    close(pipeClientesEnLocal[0]);
+    close(pipeClientesEnLocal[1]); 
 
     struct msgbuf mOrden, mPedido;
 
@@ -203,6 +234,8 @@ void empPapas(int empleado){
     close(pipeEntregaP[0]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
+    close(pipeClientesEnLocal[0]);
+    close(pipeClientesEnLocal[1]);
 
     struct msgbuf mOrden, mPedido;
 
@@ -236,6 +269,8 @@ void empVegano(){
     close(pipeEntregaP[0]);
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
+    close(pipeClientesEnLocal[0]);
+    close(pipeClientesEnLocal[1]);
 
     struct msgbuf mOrden, mPedido;
 
@@ -265,10 +300,21 @@ int main(){
     if(pipe(pipeEntregaB) == -1){ return -1; }
     if(pipe(pipeEntregaP) == -1){ return -1; }
     if(pipe(pipeEntregaV) == -1){ return -1; }
+    if(pipe(pipeClientesEnLocal) == -1){ return -1; }
 
     fcntl(pipeCl[0], F_SETFL, O_NONBLOCK);
     fcntl(pipeClVip[0], F_SETFL, O_NONBLOCK);
+    fcntl(pipeClientesEnLocal[0], F_SETFL, O_NONBLOCK);
 
+
+    struct msgbuf muchosClientes;
+
+    for(int e = 0; e<MUCHOS_CLIENTES; e++){
+		
+		write(pipeClientesEnLocal[1],&muchosClientes,pedido);
+	}
+	
+        
     for(int j = 0; j < CANT_CLIENTES; j++){
         pidClientes[j] = fork();
         if(pidClientes[j] == 0){
