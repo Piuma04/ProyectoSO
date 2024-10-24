@@ -17,6 +17,7 @@
 #define PAPASCOL "\e[1;33m"
 #define BURGUERCOL "\e[1;31m"
 #define VEGANOCOL "\e[1;32m"
+#define QUISOESP "\e[1;36m"
 #define VIP 1
 #define NORMAL 2
 #define VEGANO 3
@@ -27,7 +28,7 @@
 #define MUCHOS_CLIENTES 3
 
 int pipeBurguer[2], pipePapas[2], pipeVegano[2];
-int pipeClVip[2], pipeCl[2];
+int pipeClVip[2], pipeCl[2], pipeHayCl[2];
 int pipeEntregaB[2], pipeEntregaP[2], pipeEntregaV[2];
 
 
@@ -44,7 +45,7 @@ void pedir(){
 
     
     srand(getpid());
-    struct msgbuf mOrden, mPedido;
+    struct msgbuf mOrden, mPedido, mHayCli;
     int tipoCliente = rand() % 2 + 1;
     int tipoMenu = rand() % 3 + 3;
     mOrden.tipoMenu = tipoMenu;
@@ -61,8 +62,8 @@ void pedir(){
         printf(CLIENTE"Cliente enviando menu %d\n", mOrden.tipoMenu);
         fflush(stdout);
     }
-  
-
+    write(pipeHayCl[1],&mHayCli,pedido);
+    
     sleep(2);
     
     switch(mOrden.tipoMenu){
@@ -103,6 +104,8 @@ void cliente(){
     close(pipeEntregaB[1]);
     close(pipeEntregaP[1]);
     close(pipeEntregaV[1]);
+    close(pipeHayCl[1]);
+   
     
     srand(getpid());
 	struct msgbuf hayClientes; 
@@ -110,11 +113,11 @@ void cliente(){
 
 		ganas_de_esperar = rand() % 10;
 		if(ganas_de_esperar > 0 ){ 
-			printf("tuvo ganas de esperar\n");
+			printf(QUISOESP"tuvo ganas de esperar\n");
 			fflush(stdout);
 			pedir();  
 		} //10 % de probabilidades de que tenga ganas de esperar
-		else { printf("no quiso esperar\n"); fflush(stdout); }
+		else { printf(QUISOESP"no quiso esperar\n"); fflush(stdout); }
 	
 	
 	sleep(2);
@@ -135,12 +138,13 @@ void despachador(){
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
-  
-    struct msgbuf mOrden, mPrep;
+    close(pipeHayCl[0]);
+    struct msgbuf mOrden, mPrep, mHayCli;
 
     int recibioPedido;
     while(1){
         recibioPedido = 0;
+        write(pipeHayCl[0],&mHayCli,pedido);
         if(read(pipeClVip[0], &mOrden, pedido) == -1){
             if(read(pipeCl[0], &mOrden, pedido) != -1) {
                 recibioPedido = 1;
@@ -194,7 +198,8 @@ void empHamburguesa(){
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
-
+    close(pipeHayCl[1]);
+    close(pipeHayCl[0]);
 
     struct msgbuf mOrden, mPedido;
 
@@ -228,7 +233,8 @@ void empPapas(int empleado){
     close(pipeEntregaP[0]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
-
+    close(pipeHayCl[1]);
+    close(pipeHayCl[0]);
 
     struct msgbuf mOrden, mPedido;
 
@@ -262,7 +268,8 @@ void empVegano(){
     close(pipeEntregaP[0]);
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
-
+    close(pipeHayCl[1]);
+    close(pipeHayCl[0]);
 
     struct msgbuf mOrden, mPedido;
 
@@ -292,7 +299,7 @@ int main(){
     if(pipe(pipeEntregaB) == -1){ return -1; }
     if(pipe(pipeEntregaP) == -1){ return -1; }
     if(pipe(pipeEntregaV) == -1){ return -1; }
-
+    if(pipe(pipeHayCl) == -1){ return -1; }
 
     fcntl(pipeCl[0], F_SETFL, O_NONBLOCK);
     fcntl(pipeClVip[0], F_SETFL, O_NONBLOCK);
@@ -336,6 +343,6 @@ int main(){
         kill(pidEmpleados[e], SIGTERM);
     }
 
-    printf(" %s\n", strerror(errno));
+    
     return 0;
 }
