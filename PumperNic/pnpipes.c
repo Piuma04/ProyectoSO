@@ -25,7 +25,6 @@
 #define PAPAS 5
 #define CANT_CLIENTES 5
 #define CANT_EMPLEADOS 5 
-#define MUCHOS_CLIENTES 3
 
 int pipeBurguer[2], pipePapas[2], pipeVegano[2];
 int pipeClVip[2], pipeCl[2], pipeHayCl[2];
