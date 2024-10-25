@@ -103,7 +103,7 @@ void cliente(){
     close(pipeEntregaB[1]);
     close(pipeEntregaP[1]);
     close(pipeEntregaV[1]);
-    close(pipeHayCl[1]);
+    close(pipeHayCl[0]);
    
     
     srand(getpid());
@@ -137,7 +137,7 @@ void despachador(){
     close(pipeEntregaP[1]);
     close(pipeEntregaV[0]);
     close(pipeEntregaV[1]);
-    close(pipeHayCl[0]);
+    close(pipeHayCl[1]);
     struct msgbuf mOrden, mPrep, mHayCli;
 
     int recibioPedido;
