@@ -143,7 +143,7 @@ void despachador(){
     int recibioPedido;
     while(1){
         recibioPedido = 0;
-        write(pipeHayCl[0],&mHayCli,pedido);
+        read(pipeHayCl[0],&mHayCli,pedido);
         if(read(pipeClVip[0], &mOrden, pedido) == -1){
             if(read(pipeCl[0], &mOrden, pedido) != -1) {
                 recibioPedido = 1;
