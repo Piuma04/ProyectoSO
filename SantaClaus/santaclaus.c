@@ -31,7 +31,7 @@ sem_t esperando_en_cabaña; //hace que esperen a santa
 void *elfo(void *arg){
 	
 
-	int minum = pthread_self();
+	int minum = (int) arg;
 	
 	int dificultad_al_hacer_juguete;
 	while(1){
@@ -166,7 +166,7 @@ int main(){
 	
 	for(int a = 0; a<CANT_ELFO; a++){
 	
-		pthread_create(&elfos_a_usar[a],NULL,elfo,NULL);
+		pthread_create(&elfos_a_usar[a],NULL,elfo,a);
 	}
 	
 	for(int b = 0; b<CANT_RENO; b++){
