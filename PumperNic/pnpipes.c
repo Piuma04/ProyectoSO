@@ -53,17 +53,16 @@ void pedir(){
     if (tipoCliente == VIP) {
         close(pipeCl[1]);
         write(pipeClVip[1], &mOrden, pedido);
-        printf(CLIENTEVIP"Cliente VIP enviando menu %d\n", mOrden.tipoMenu);
+        printf(CLIENTEVIP"Cliente VIP enviando menu %ld\n", mOrden.tipoMenu);
         fflush(stdout);
     } else {
         close(pipeClVip[1]);
         write(pipeCl[1], &mOrden, pedido);
-        printf(CLIENTE"Cliente enviando menu %d\n", mOrden.tipoMenu);
+        printf(CLIENTE"Cliente enviando menu %ld\n", mOrden.tipoMenu);
         fflush(stdout);
     }
     write(pipeHayCl[1],&mHayCli,pedido);
-    
-    sleep(2);
+
     
     switch(mOrden.tipoMenu){
         case PAPAS:
@@ -80,12 +79,13 @@ void pedir(){
         }
     
     if (tipoCliente == VIP) {
-        printf(CLIENTEVIP"Cliente VIP recibiendo menu %d\n", mPedido.tipoMenu);
+        printf(CLIENTEVIP"Cliente VIP recibiendo menu %ld\n", mPedido.tipoMenu);
         fflush(stdout);
     } else {
-        printf(CLIENTE"Cliente recibiendo menu %d\n", mPedido.tipoMenu);
+        printf(CLIENTE"Cliente recibiendo menu %ld\n", mPedido.tipoMenu);
         fflush(stdout);
     }
+   
 
 
 }
@@ -208,7 +208,7 @@ void empHamburguesa(){
         printf(BURGUERCOL"Haciendo hamburguesa \n");
         fflush(stdout);
 
-        sleep(2);
+       
 
         mPedido.tipoMenu = BURGER;
         mPedido.tipoCliente = mOrden.tipoCliente;
@@ -243,7 +243,7 @@ void empPapas(int empleado){
         printf(PAPASCOL"Haciendo papas fritas (empleado %d)\n", empleado);
         fflush(stdout);
 
-        sleep(2);
+        
         mPedido.tipoMenu = PAPAS;
         mPedido.tipoCliente = mOrden.tipoCliente;
 
@@ -278,7 +278,7 @@ void empVegano(){
         printf(VEGANOCOL"Haciendo menu vegano \n");
         fflush(stdout);
 
-        sleep(2);
+        
         mPedido.tipoMenu = VEGANO;
         mPedido.tipoCliente = mOrden.tipoCliente;
 

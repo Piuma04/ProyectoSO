@@ -15,6 +15,7 @@
 #define PAPASCOL "\e[1;33m"
 #define BURGUERCOL "\e[1;31m"
 #define VEGANOCOL "\e[1;32m"
+#define QUISOESP "\e[1;36m"
 
 #define VIP 1
 #define NORMAL 2
@@ -57,10 +58,10 @@ void pedir(){
 	
 	
 	if(tipoCliente == VIP){
-		printf(CLIENTEVIP"Cliente VIP enviando menu %d\n",mOrden.tipoMenu);
+		printf(CLIENTEVIP"Cliente VIP enviando menu %ld\n",mOrden.tipoMenu);
 		fflush(stdout);
 	}else {
-		printf(CLIENTE"Cliente  enviando menu %d\n",mOrden.tipoMenu);
+		printf(CLIENTE"Cliente  enviando menu %ld\n",mOrden.tipoMenu);
 		fflush(stdout);
 	}
 	
@@ -74,10 +75,10 @@ void pedir(){
 	
 	
 	if(tipoCliente == VIP){
-		printf(CLIENTEVIP"Cliente VIP que pidio %d recibiendo menu %d\n",tipoMenu,mPedido.tipoMenu);
+		printf(CLIENTEVIP"Cliente VIP que pidio %d recibiendo menu %ld\n",tipoMenu,mPedido.tipoMenu);
 		fflush(stdout);
 	}else{
-		printf(CLIENTE"Cliente que pidio %d recibiendo menu %d\n",tipoMenu,mPedido.tipoMenu);
+		printf(CLIENTE"Cliente que pidio %d recibiendo menu %ld\n",tipoMenu,mPedido.tipoMenu);
 		fflush(stdout);
 	}
 
@@ -92,11 +93,11 @@ void cliente(){
 	
 		ganas_de_esperar = rand() % 10;
 		if(ganas_de_esperar >  0 ){ 
-			printf("tuvo ganas de esperar\n");
+			printf(QUISOESP"tuvo ganas de esperar\n");
 			fflush(stdout);
 			pedir();  
 		} //10 % de probabilidades de que tenga ganas de esperar
-		else { printf("no quiso esperar\n"); fflush(stdout); }
+		else { printf(QUISOESP"no quiso esperar\n"); fflush(stdout); }
 
 	sleep(2);
 
@@ -113,7 +114,7 @@ void despachador(){
 	while(1){
 		
 	
-		sleep(2);
+		
 		msgrcv(qid,&mOrden,longitud,-2,0);
 		
 		
