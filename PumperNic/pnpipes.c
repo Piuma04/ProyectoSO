@@ -51,12 +51,12 @@ void pedir(){
     mOrden.tipoCliente = tipoCliente;
 
     if (tipoCliente == VIP) {
-        close(pipeCl[1]);
+       
         write(pipeClVip[1], &mOrden, pedido);
         printf(CLIENTEVIP"Cliente VIP enviando menu %ld\n", mOrden.tipoMenu);
         fflush(stdout);
     } else {
-        close(pipeClVip[1]);
+       
         write(pipeCl[1], &mOrden, pedido);
         printf(CLIENTE"Cliente enviando menu %ld\n", mOrden.tipoMenu);
         fflush(stdout);
@@ -121,7 +121,12 @@ void cliente(){
 	
 	sleep(2);
     
-    
+    close(pipeEntregaB[0]);
+    close(pipeEntregaV[0]);
+    close(pipeEntregaP[0]);
+    close(pipeHayCl[1]);
+     close(pipeCl[1]);
+      close(pipeClVip[1]);
     exit(0);
 }
 
@@ -179,6 +184,11 @@ void despachador(){
             recibioPedido = 0;
         }
     }
+    
+    close(pipeCl[0]);
+    close(pipeVegano[1]);
+    close(pipePapas[1]);
+    close(pipeBurguer[1]);
     exit(0);
 }
 
@@ -214,6 +224,8 @@ void empHamburguesa(){
         mPedido.tipoCliente = mOrden.tipoCliente;
         write(pipeEntregaB[1], &mPedido, pedido);
     }
+    close(pipeBurguer[0]);
+    close(pipeEntregaB[1]);
     exit(0);
 }
 
@@ -249,6 +261,8 @@ void empPapas(int empleado){
 
         write(pipeEntregaP[1], &mPedido, pedido);
     }
+        close(pipePapas[0]);
+    close(pipeEntregaP[1]);
     exit(0);
 }
 
@@ -284,6 +298,9 @@ void empVegano(){
 
         write(pipeEntregaV[1], &mPedido, pedido);
     }
+    
+    close(pipeVegano[0]);
+    close(pipeEntregaV[1]);
     exit(0);
 }
 
