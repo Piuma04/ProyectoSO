@@ -50,7 +50,7 @@ int main(){
 					if(pid == 0){
 						char para_dir[] = "./"; 
 						strcat(para_dir,token);
-						char *args[] = {token,resto,NULL}; //preguntar si esto es valido
+						char *args[] = {token,resto,NULL}; /
 						if(execvp(para_dir,args) == -1){
 							printf("Comando invalido\n");
 						}

@@ -125,8 +125,8 @@ void cliente(){
     close(pipeEntregaV[0]);
     close(pipeEntregaP[0]);
     close(pipeHayCl[1]);
-     close(pipeCl[1]);
-      close(pipeClVip[1]);
+    close(pipeCl[1]);
+    close(pipeClVip[1]);
     exit(0);
 }
 
