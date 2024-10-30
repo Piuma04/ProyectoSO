@@ -350,12 +350,12 @@ int main(){
         empVegano();
     }
 
-    for(int c = 0; c < CANT_CLIENTES; c++){
+    for(int c = 0; c < CANT_CLIENTES; c++){ //espera a que terminen los clientes
         int status;
         waitpid(pidClientes[c], &status, 0);
     }
 
-    for(int e = 0; e < CANT_EMPLEADOS; e++){
+    for(int e = 0; e < CANT_EMPLEADOS; e++){ //entonces, mata a el resto de los procesos
         kill(pidEmpleados[e], SIGTERM);
     }
 

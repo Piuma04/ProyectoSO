@@ -274,12 +274,12 @@ int main(){
 	
 	
 		
-	for(int c = 0; c<CANT_CLIENTES; c++){
+	for(int c = 0; c<CANT_CLIENTES; c++){ //espera a que terminen los clientes
 		int status;
 		waitpid(pidClientes[c],&status,0);
 	}
 	
-	for(int e = 0; e<CANT_EMPLEADOS; e++){
+	for(int e = 0; e<CANT_EMPLEADOS; e++){  //cuando terminan los clientes, mata a el resto de procesos
 		
 		kill(pidEmpleados[e],SIGTERM);
 	}
