@@ -145,19 +145,17 @@ void despachador(){
     close(pipeHayCl[1]);
     struct msgbuf mOrden, mPrep, mHayCli;
 
-    int recibioPedido;
+ 
     while(1){
-        recibioPedido = 0;
+        
         read(pipeHayCl[0],&mHayCli,pedido);
+       
         if(read(pipeClVip[0], &mOrden, pedido) == -1){
-            if(read(pipeCl[0], &mOrden, pedido) != -1) {
-                recibioPedido = 1;
-            }
-        } else {
-            recibioPedido = 1;
+            read(pipeCl[0], &mOrden, pedido);
+    
         }
 
-        if(recibioPedido){
+       
             mPrep.tipoMenu = mOrden.tipoMenu;
             mPrep.tipoCliente = mOrden.tipoCliente;
 
@@ -180,10 +178,10 @@ void despachador(){
                 default: 
                     printf("error, despachador recibio un menu no existente \n");
                     break;
+         
             }
-            recibioPedido = 0;
-        }
     }
+    
     
     close(pipeCl[0]);
     close(pipeVegano[1]);
