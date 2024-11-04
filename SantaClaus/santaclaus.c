@@ -9,6 +9,9 @@
 #define CANT_ELFO 9
 #define CANT_RENO 9
 
+#define CANT_MAX_RENOS 9  //limita la cantidad de maxima de renos que pueden haber en un semaforo
+#define CANT_MAX_ELFOS 3  //limita la cantidad maxima de elfos que pueden pedir ayuda
+
 
 
 //usados para garantizar exclusion mutua con santa en la parte de ver si llenaron el grupo
@@ -63,8 +66,8 @@ void *elfo(void *arg){
 
 				sem_wait(&elf_con_dif);
 				if(sem_trywait(&elf_con_dif) != 0){ //si soy el ultimo
-					for(int i = 3; i>0; i--) {sem_post(&elf_con_dif);}	
-					for(int j = 3; j>0; j--) {sem_post(&otros_elfos);}
+					for(int i = CANT_MAX_ELFOS; i>0; i--) {sem_post(&elf_con_dif);}	
+					for(int j = CANT_MAX_ELFOS; j>0; j--) {sem_post(&otros_elfos);}
 				}else 
 					sem_post(&elf_con_dif);
 			pthread_mutex_unlock(&elfos);
@@ -80,6 +83,7 @@ void *elfo(void *arg){
 void *reno(void *arg){
 	while(1){
 	sleep((int)(rand() % 15 + 5)); //simula el hecho de estar de vacaciones
+	
 	sem_wait(&otros_renos);
 	pthread_mutex_lock(&renos);
 		sem_wait(&ren_vuelta_vacaciones);
@@ -104,12 +108,13 @@ void *reno(void *arg){
 
 				sem_wait(&ren_vuelta_vacaciones);
 				if(sem_trywait(&ren_vuelta_vacaciones) != 0){ //si soy el ultimo
-					for(int i = CANT_RENO; i>0; i--) {sem_post(&ren_vuelta_vacaciones); sem_post(&otros_renos);}	
+					for(int i = CANT_MAX_RENOS ; i>0; i--) {sem_post(&ren_vuelta_vacaciones); sem_post(&otros_renos);}	
 					printf("nos fuimos todos\n");
 				}else 
 					sem_post(&ren_vuelta_vacaciones);
 	pthread_mutex_unlock(&renos);
 	}
+	
 	pthread_exit(0);
 }
 
@@ -121,7 +126,7 @@ void *santa(void *arg){
         if(sem_trywait(&ren_vuelta_vacaciones) != 0){ //veo si no falta ningun reno
 			
 				printf("trineo hecho ! ------\n"); 
-				for(int i = 0; i < CANT_RENO; i++) {
+				for(int i = 0; i < CANT_MAX_RENOS ; i++) {
 					sem_post(&ren_vuelta_vacaciones);
 					sem_post(&esperando_en_cabaña);
 				}
@@ -133,8 +138,8 @@ void *santa(void *arg){
     
     pthread_mutex_lock(&elfos);
 		if(sem_trywait(&elf_con_dif) != 0){ //veo si el grupo ya tiene 3 elfos
-			for(int j = 3; j>0; j--) {sem_post(&esperando_santa_elf); printf("ayudando a un elfo!\n");}
-			for(int i = 3; i>0; i--) {sem_post(&elf_con_dif);}	
+			for(int j = CANT_MAX_ELFOS; j>0; j--) {sem_post(&esperando_santa_elf); printf("ayudando a un elfo!\n");}
+			for(int i = CANT_MAX_ELFOS; i>0; i--) {sem_post(&elf_con_dif);}	
 		}
 		else{
 			sem_post(&elf_con_dif);
@@ -153,12 +158,12 @@ int main(){
 	
 	
 	sem_init(&despertar,0,0);
-	sem_init(&otros_elfos,0,3);
-	sem_init(&elf_con_dif ,0,3);
+	sem_init(&otros_elfos,0,CANT_MAX_ELFOS);
+	sem_init(&elf_con_dif ,0,CANT_MAX_ELFOS);
 	sem_init(&esperando_santa_elf,0,0);
 	sem_init(&esperando_en_cabaña,0,0);
-	sem_init(&otros_renos,0,CANT_RENO);
-	sem_init(&ren_vuelta_vacaciones,0,CANT_RENO);
+	sem_init(&otros_renos,0,CANT_MAX_RENOS );
+	sem_init(&ren_vuelta_vacaciones,0, CANT_MAX_RENOS );
 
 
 	
@@ -185,11 +190,14 @@ int main(){
 	
 	sem_close(&despertar );
 	sem_close(&otros_elfos );
+	sem_close(&otros_renos);
 	sem_close(&elf_con_dif );
 	sem_close(&esperando_santa_elf );
 	sem_close(&esperando_en_cabaña );
 	sem_close(&ren_vuelta_vacaciones );
 
+	pthread_mutex_destroy(&renos);
+	pthread_mutex_destroy(&elfos);
 
 	return 0;
 	
