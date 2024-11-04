@@ -9,7 +9,7 @@
 #define CANT_ELFO 9
 #define CANT_RENO 9
 
-#define CANT_MAX_RENOS 9  //limita la cantidad de maxima de renos que pueden haber en un semaforo
+#define CANT_MAX_RENOS 9  //limita la cantidad de maxima de renos que pueden haber en un trineo
 #define CANT_MAX_ELFOS 3  //limita la cantidad maxima de elfos que pueden pedir ayuda
 
 
