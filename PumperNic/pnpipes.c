@@ -109,7 +109,7 @@ void cliente(){
     srand(getpid());
 	struct msgbuf hayClientes; 
     int ganas_de_esperar;
-
+    
 		ganas_de_esperar = rand() % 10;
 		if(ganas_de_esperar > 0 ){ 
 			printf(QUISOESP"tuvo ganas de esperar\n");
@@ -149,7 +149,7 @@ void despachador(){
     while(1){
         
         read(pipeHayCl[0],&mHayCli,pedido);
-       
+       printf(QUISOESP"me llego un pedido\n");
         if(read(pipeClVip[0], &mOrden, pedido) == -1){
             read(pipeCl[0], &mOrden, pedido);
     
