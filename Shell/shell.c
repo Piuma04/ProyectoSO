@@ -5,7 +5,7 @@
 #include <pthread.h>
 #include <string.h>
 #include <errno.h>
-#define BFR_SZ 100 //porque da error este?
+#define BFR_SZ 100 
    
 int main(){
 	
