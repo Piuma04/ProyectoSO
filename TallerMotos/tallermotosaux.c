@@ -7,23 +7,17 @@
 #include <semaphore.h>
 
 
-
-
-
-sem_t OP1,OP2,OP3, P, OP4;
+sem_t OP1,OP2,OP3, P, OP4, sec;
 
 void *Rueda(void *arg){
 	
 	while(1){
-		for(int i = 0; i<4; i++){
-			
-			sem_wait(&OP1);
-				printf("poniendo rueda \n");
-			sem_post(&OP2);
-		}
+		sem_wait(&sec);
 		sem_wait(&OP1);
-		sem_wait(&OP1);
+		printf("poniendo rueda \n");
+		sem_post(&OP2);
 	}
+	
 	pthread_exit(0);
 }
 
@@ -80,12 +74,15 @@ void *EqExtra(void *arg){
 
 	while(1){
 		sem_wait(&OP4);
-		sem_wait(&OP4);
+		sem_wait(&OP4);		
 		printf("poniendo eq extra\n");
 		printf("\n");
 		
-		sem_post(&OP1);
-		sem_post(&OP1);
+		sleep(2);
+		sem_post(&sec);
+		sem_post(&sec);
+		sem_post(&sec);
+		sem_post(&sec);
 	}
 	
 	pthread_exit(0);
@@ -102,6 +99,7 @@ int main(){
 	sem_init(&OP3,0,0);
 	sem_init(&P,0,0);
 	sem_init(&OP4,0,0);
+	sem_init(&sec,0,4);
 	
 	
 	pthread_create(&op1,NULL,Rueda,NULL);
@@ -121,13 +119,15 @@ int main(){
 
 	
 	
-	sem_close(&OP1 );
-	sem_close(&OP2 );
+	sem_close(&OP1);
+	sem_close(&OP2);
 	sem_close(&OP3);
-	sem_close(&P );
-	sem_close(&OP4 );
+	sem_close(&P);
+	sem_close(&OP4);
+	sem_close(&sec);
 	
 
 	return 0;
 	
 }
+
