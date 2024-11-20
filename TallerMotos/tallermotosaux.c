@@ -56,6 +56,8 @@ void *PintarVerde(void *arg){
 		sem_wait(&P);
 			printf("pintando de verde\n");
 		sem_post(&OP4);
+		sem_post(&OP1);
+		sem_post(&OP1);
 	}
 	
 	pthread_exit(0);
