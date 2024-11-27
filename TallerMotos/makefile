@@ -3,7 +3,7 @@ CC = gcc
 CFLAGS =  -Wall -Wextra 
 
 # Lista de archivos fuente
-SOURCES = tallermotos.c 
+SOURCES = tallermotos.c tallermotosaux.c
 
 # Generar una lista de ejecutables basada en los nombres de los archivos fuente
 EXECUTABLES = $(SOURCES:.c=)
